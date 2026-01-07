@@ -19,16 +19,48 @@ const app = express();
 app.use(cors());
 app.use(express.json());
 
-app.get("/health", async (_req: Request, res: Response) => {
+/*
+ * Root informational route
+ */
+app.get("/", (_req: Request, res: Response) => {
+  res.status(200).json({
+    message: "Backend API is running",
+    apiBase: "/api",
+    availableEndpoints: {
+      health: "GET /api/health",
+      auth: "POST /api/auth/*"
+    }
+  });
+});
+
+/*
+ * API routes
+ */
+const api = express.Router();
+
+api.get("/health", async (_req: Request, res: Response) => {
   try {
     await dbHealthCheck();
     res.status(200).json({ status: "ok" });
   } catch (e: any) {
-    res.status(503).json({ status: "db_down", error: e?.message ?? "unknown" });
+    res.status(503).json({
+      status: "db_down",
+      error: e?.message ?? "unknown"
+    });
   }
 });
 
-app.use("/auth", authRouter);
+api.use("/auth", authRouter);
+app.use("/api", api);
+
+app.use((req: Request, res: Response) => {
+  res.status(404).json({
+    error: "Not Found",
+    method: req.method,
+    path: req.originalUrl
+  });
+});
+
 
 const port = Number(process.env.PORT || 3000);
 
@@ -37,8 +69,10 @@ async function start(): Promise<void> {
   console.log("DB connection verified");
 
   const server = app.listen(port, "0.0.0.0", () => {
-    console.log(`Backend listening on port ${port}`);
-    console.log("Backend startup complete");
+	console.log("");
+	console.log("[server] Backend listening on port 3000");
+	console.log("[server] API base: http://localhost:3000/api");
+	console.log("");
   });
 
   const shutdown = async (signal: string) => {
@@ -57,6 +91,7 @@ async function start(): Promise<void> {
   process.on("SIGINT", () => void shutdown("SIGINT"));
   process.on("SIGTERM", () => void shutdown("SIGTERM"));
 }
+
 
 start().catch((e) => {
   console.error("Startup failed", e);

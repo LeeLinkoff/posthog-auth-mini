@@ -5,7 +5,19 @@ export interface AuthRequest extends Request {
   userId?: string;
 }
 
-export function requireAuth(req: AuthRequest, res: Response, next: NextFunction) {
+function mustGetEnv(name: string): string {
+  const v = process.env[name];
+  if (!v) throw new Error(`${name} missing`);
+  return v;
+}
+
+const JWT_SECRET = mustGetEnv("JWT_SECRET");
+
+export function requireAuth(
+  req: AuthRequest,
+  res: Response,
+  next: NextFunction
+) {
   const header = req.headers.authorization;
   if (!header) {
     return res.status(401).json({ error: "Unauthorized" });
@@ -17,10 +29,7 @@ export function requireAuth(req: AuthRequest, res: Response, next: NextFunction)
   }
 
   try {
-    const payload = jwt.verify(token, process.env.JWT_SECRET as string) as {
-      userId: string;
-    };
-
+    const payload = jwt.verify(token, JWT_SECRET) as { userId: string };
     req.userId = payload.userId;
     next();
   } catch {
