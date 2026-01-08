@@ -12,6 +12,7 @@ function mustGetEnv(name: string): string {
   return v;
 }
 
+// Single connection string used intentionally to keep configuration explicit
 const rawUrl = mustGetEnv("DATABASE_URL");
 
 /*
@@ -32,7 +33,8 @@ if (process.env.NODE_ENV !== "production") {
 }
 
 /*
- * Single shared connection pool
+ * Single shared connection pool.
+ * This module is the sole owner of database connections.
  */
 export const pool = new Pool({
   connectionString: rawUrl
@@ -51,7 +53,8 @@ export async function dbHealthCheck(): Promise<void> {
 }
 
 /*
- * Graceful shutdown hook
+ * Graceful shutdown hook.
+ * Called explicitly by the application during process termination.
  */
 export async function shutdownDb(): Promise<void> {
   await pool.end();

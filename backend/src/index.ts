@@ -1,3 +1,18 @@
+/*
+  Application entry point.
+
+  This file is responsible for:
+  - Process configuration and startup validation
+  - HTTP server initialization
+  - Route wiring and global middleware
+  - Graceful shutdown coordination
+
+  Design constraints:
+  - Fail fast on missing critical configuration
+  - Prefer explicit behavior over implicit framework defaults
+  - Avoid leaking internal errors at process boundaries
+*/
+
 import "dotenv/config";
 
 import express, { Request, Response } from "express";
@@ -7,23 +22,31 @@ import { dbHealthCheck, shutdownDb } from "./db";
 import { requireAuth, AuthRequest } from "./middleware/auth.middleware";
 
 
+/*
+ * Small helper to fail fast if required environment variables are missing.
+ * Prevents partial startup and delayed runtime failures.
+ */
 function mustGetEnv(name: string): string {
   const v = process.env[name];
   if (!v) throw new Error(`${name} missing`);
   return v;
 }
 
+// Validate critical configuration at startup
 mustGetEnv("DATABASE_URL");
 mustGetEnv("JWT_SECRET");
 
 const app = express();
 
+// Global middleware applied once for all routes
 app.use(cors());
 app.use(express.json());
 
 
 /*
- * Root informational route
+ * Root informational route.
+ * Exists to make service presence and API shape discoverable
+ * without requiring authentication.
  */
 app.get("/", (_req: Request, res: Response) => {
   res.status(200).json({
@@ -38,10 +61,19 @@ app.get("/", (_req: Request, res: Response) => {
 
 
 /*
- * API routes
+ * API routes are grouped under a common router
+ * to keep transport concerns separate from startup wiring.
  */
 const api = express.Router();
 
+/*
+ * Health endpoint used by:
+ * - startup checks
+ * - container orchestration
+ * - external monitors
+ *
+ * Intentionally masks low-level database errors.
+ */
 api.get("/health", async (_req: Request, res: Response) => {
   try {
     await dbHealthCheck();
@@ -54,7 +86,10 @@ api.get("/health", async (_req: Request, res: Response) => {
   }
 });
 
-// Demo endpoint to prove auth middleware reuse outside /auth
+/*
+ * Demo endpoint to prove authentication middleware reuse
+ * outside of the /auth namespace.
+ */
 api.get("/session", requireAuth, (req: AuthRequest, res) => {
   res.json({
     authenticated: true,
@@ -68,8 +103,12 @@ api.get("/session", requireAuth, (req: AuthRequest, res) => {
  * Why this endpoint exists:
  *
  * Analytics ingestion often succeeds even when data quality is poor.
- * Events can be duplicated, delayed, or ambiguous, yet nothing crashes and metrics still look reasonable.
- * This endpoint makes those failure modes observable so they can be reasoned about instead of hidden behind retries, batching, or SDK abstractions.
+ * Events can be duplicated, delayed, or ambiguous, yet nothing crashes
+ * and metrics still look reasonable.
+ *
+ * This endpoint makes those failure modes observable so they can be
+ * reasoned about explicitly instead of hidden behind retries,
+ * batching, or SDK abstractions.
  */
 api.post("/events", async (req: Request, res: Response) => {
   const {
@@ -119,12 +158,17 @@ api.post("/events", async (req: Request, res: Response) => {
   });
 });
 
-
+// Auth routes are mounted under /api/auth
 api.use("/auth", authRouter);
+
+// Attach API router under a single base path
 app.use("/api", api);
 
 
-
+/*
+ * Catch-all handler for unknown routes.
+ * Intentionally returns minimal information.
+ */
 app.use((req: Request, res: Response) => {
   res.status(404).json({
     error: "Not Found",
@@ -136,6 +180,9 @@ app.use((req: Request, res: Response) => {
 
 const port = Number(process.env.PORT || 3000);
 
+/*
+ * Application startup and shutdown coordination.
+ */
 async function start(): Promise<void> {
   if (process.env.SKIP_DB_CHECK !== "true") {
     await dbHealthCheck();
@@ -169,8 +216,10 @@ async function start(): Promise<void> {
 }
 
 
-// Intentionally suppress internal error details at startup.
-// Low-level stack traces are not actionable here and may leak internals.
+/*
+ * Intentionally suppress internal error details at startup.
+ * Low-level stack traces are not actionable here and may leak internals.
+ */
 start().catch(() => {
   console.error(
     "Startup failed: database connection could not be established. " +

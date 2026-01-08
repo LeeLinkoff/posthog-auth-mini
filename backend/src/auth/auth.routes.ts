@@ -1,3 +1,5 @@
+// Auth related analytics events are emitted within auth.service, not at the route layer
+
 import { Router } from "express";
 import { registerUser, authenticateUser } from "./auth.service";
 import { requireAuth, AuthRequest } from "../middleware/auth.middleware";
