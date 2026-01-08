@@ -1,73 +1,36 @@
-# React + TypeScript + Vite
+# Analytics Instrumentation Control Panel (Frontend)
 
-This template provides a minimal setup to get React working in Vite with HMR and some ESLint rules.
+This frontend is a minimal control surface for exercising analytics ingestion behavior.
 
-Currently, two official plugins are available:
+It is intentionally not a product UI, dashboard, or growth demo. Its purpose is to make analytics semantics and failure modes observable without relying on vendor tooling or verbal explanation.
 
-- [@vitejs/plugin-react](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react) uses [Babel](https://babeljs.io/) (or [oxc](https://oxc.rs) when used in [rolldown-vite](https://vite.dev/guide/rolldown)) for Fast Refresh
-- [@vitejs/plugin-react-swc](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react-swc) uses [SWC](https://swc.rs/) for Fast Refresh
+## What this UI demonstrates
 
-## React Compiler
+When running, this UI allows you to:
 
-The React Compiler is not enabled on this template because of its impact on dev & build performances. To add it, see [this documentation](https://react.dev/learn/react-compiler/installation).
+- send analytics events with explicit semantic meaning
+- intentionally introduce duplicate events
+- intentionally delay event delivery
+- observe successful ingestion responses even when data quality is degraded
 
-## Expanding the ESLint configuration
+A successful response indicates that an event was accepted for ingestion, not that it is correct, unique, timely, or safe to use for decision-making.
 
-If you are developing a production application, we recommend updating the configuration to enable type-aware lint rules:
+## Running the frontend
 
-```js
-export default defineConfig([
-  globalIgnores(['dist']),
-  {
-    files: ['**/*.{ts,tsx}'],
-    extends: [
-      // Other configs...
+From the repository root, run the following commands:
 
-      // Remove tseslint.configs.recommended and replace with this
-      tseslint.configs.recommendedTypeChecked,
-      // Alternatively, use this for stricter rules
-      tseslint.configs.strictTypeChecked,
-      // Optionally, add this for stylistic rules
-      tseslint.configs.stylisticTypeChecked,
+- cd frontend
+- npm install
+- npm run dev
 
-      // Other configs...
-    ],
-    languageOptions: {
-      parserOptions: {
-        project: ['./tsconfig.node.json', './tsconfig.app.json'],
-        tsconfigRootDir: import.meta.dirname,
-      },
-      // other options...
-    },
-  },
-])
-```
+This starts a local development server. Open the URL shown in the terminal and use the control panel to send events.
 
-You can also install [eslint-plugin-react-x](https://github.com/Rel1cx/eslint-react/tree/main/packages/plugins/eslint-plugin-react-x) and [eslint-plugin-react-dom](https://github.com/Rel1cx/eslint-react/tree/main/packages/plugins/eslint-plugin-react-dom) for React-specific lint rules:
+The frontend expects the backend API to be running locally at:
 
-```js
-// eslint.config.js
-import reactX from 'eslint-plugin-react-x'
-import reactDom from 'eslint-plugin-react-dom'
+http://localhost:3000
 
-export default defineConfig([
-  globalIgnores(['dist']),
-  {
-    files: ['**/*.{ts,tsx}'],
-    extends: [
-      // Other configs...
-      // Enable lint rules for React
-      reactX.configs['recommended-typescript'],
-      // Enable lint rules for React DOM
-      reactDom.configs.recommended,
-    ],
-    languageOptions: {
-      parserOptions: {
-        project: ['./tsconfig.node.json', './tsconfig.app.json'],
-        tsconfigRootDir: import.meta.dirname,
-      },
-      // other options...
-    },
-  },
-])
-```
+## Design notes
+
+- This UI is intentionally minimal.
+- There is no authentication flow, persistence, or visualization.
+- All explanation is embedded directly in the UI to avoid reliance on external documentation or verbal walkthroughs.
