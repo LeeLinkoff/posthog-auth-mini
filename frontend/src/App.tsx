@@ -29,7 +29,7 @@ function App() {
     setStatus(null);
 
     try {
-      const res = await fetch(`${API_BASE_URL}/api/events`, {
+      const res = await fetch(`${API_BASE_URL}/events`, {
         method: "POST",
         headers: {
           "Content-Type": "application/json"
