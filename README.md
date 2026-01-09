@@ -101,6 +101,16 @@ The demo intentionally includes non-happy-path scenarios:
 
 Most analytics systems fail by producing plausible numbers. This demo is designed to make that visible.
 
+Delayed Delivery Semantics
+
+When delayed delivery is enabled, the API intentionally returns a successful
+response immediately while deferring internal event processing. This mirrors
+real analytics systems, where ingestion success does not imply timely, ordered,
+or unique data availability.
+
+The absence of a delayed client response is intentional and highlights how
+analytics pipelines can appear healthy while downstream data arrives late.
+
 ---
 
 ## Decision Safety
