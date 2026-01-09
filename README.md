@@ -19,6 +19,23 @@ The goal is to make those failure modes explicit and inspectable.
 
 ---
 
+## Live Demo
+
+A live, end-to-end deployment is available:
+
+Frontend (static, GitHub Pages):  
+https://leelinkoff.github.io/analytics-instrumentation-demo/
+
+Backend API (Render):  
+https://analytics-instrumentation-demo-backend.onrender.com
+
+Health check:  
+https://analytics-instrumentation-demo-backend.onrender.com/api/health
+
+Note: The backend runs on a free-tier service and may cold-start on first request.
+
+---
+
 ## Scope
 
 This demo focuses on:
@@ -140,7 +157,7 @@ They were not relied on for:
 
 ## Running the Demo
 
-The demo runs entirely locally and does not require a hosted analytics service.
+The demo can be explored via the live deployment above or run entirely locally, and does not require a hosted analytics service.
 
 To explore it:
 - install dependencies
