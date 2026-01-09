@@ -17,13 +17,19 @@ function App() {
   const [status, setStatus] = useState<number | null>(null);
   const [error, setError] = useState<string | null>(null);
 
+  const API_BASE_URL = import.meta.env.VITE_API_BASE_URL;
+
+  if (!API_BASE_URL) {
+    throw new Error("VITE_API_BASE_URL is not defined");
+  }
+
   const sendEvent = async () => {
     setError(null);
     setResponse(null);
     setStatus(null);
 
     try {
-      const res = await fetch("http://localhost:3000/api/events", {
+      const res = await fetch(`${API_BASE_URL}/api/events`, {
         method: "POST",
         headers: {
           "Content-Type": "application/json"
